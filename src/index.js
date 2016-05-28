@@ -8,6 +8,7 @@ class Router {
     // default option
     _options = {
         container: '#container',
+        pagesContainer: '#pages_container',
         enter: 'enter',
         enterTimeout: 0,
         leave: 'leave',
@@ -18,6 +19,9 @@ class Router {
 
     // container element
     _$container = null;
+
+    // pages run container
+    _$pagesContainer = null;
 
     // array of route config
     _routes = [];
@@ -32,6 +36,7 @@ class Router {
     constructor(options) {
         this._options = util.extend(this._options, options);
         this._$container = document.querySelector(this._options.container);
+        this._$pagesContainer = document.querySelector(this._options.pagesContainer);
     }
 
     /**
@@ -45,7 +50,7 @@ class Router {
             const hash = util.getHash(event.newURL);
             const state = history.state || {};
 
-            this.go(hash, state._index <= this._index);
+            this._go(hash, state._index <= this._index);
         }, false);
 
         if (history.state && history.state._index) {
@@ -93,10 +98,12 @@ class Router {
      * @param {Boolean} isBack, default: false
      * @returns {Router}
      */
-    go(url, isBack = false) {
+    _go(url, isBack = false) {        
         const route = this._getRoute(url);
         if (route) {
-            const html = typeof route.render === 'function' ? route.render(route.params) : '';
+            // const html = typeof route.render === 'function' ? route.render(route.params) : '';
+            const html = document.querySelector(route.render);
+
 
             // if have child already
             const hasChildren = this._$container.hasChildNodes();
@@ -107,11 +114,16 @@ class Router {
                 }
 
                 if (this._options.leaveTimeout > 0) {
+                    let thiz = this;
                     setTimeout(() => {
+                        // child.parentNode.removeChild(child);
+                        thiz._$pagesContainer.appendChild(child.childNodes[0]);
                         child.parentNode.removeChild(child);
                     }, this._options.leaveTimeout);
                 }
                 else {
+                    // child.parentNode.removeChild(child);
+                    this._$pagesContainer.appendChild(child.childNodes[0]);
                     child.parentNode.removeChild(child);
                 }
 
@@ -124,7 +136,8 @@ class Router {
                 node.classList.add(route.className);
             }
 
-            node.innerHTML = html;
+            //node.innerHTML = html;
+            node.appendChild(html)
             this._$container.appendChild(node);
             // add class
             if (!isBack && this._options.enter && hasChildren) {
@@ -140,8 +153,6 @@ class Router {
                 node.classList.remove(this._options.enter);
             }
 
-
-            location.hash = `#${url}`;
             try {
                 isBack ? this._index-- : this._index++;
                 history.replaceState && history.replaceState({_index: this._index}, '', location.href);
@@ -158,6 +169,14 @@ class Router {
             throw new Error(`url ${url} was not found`);
         }
         return this;
+    }
+
+    go(url){
+        if (!this._$container.hasChildNodes()) {
+            this._go(url);
+        } else {
+            location.hash = `#${url}`;
+        }
     }
 
     /**
