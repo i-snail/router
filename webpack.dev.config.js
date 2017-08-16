@@ -23,6 +23,10 @@ module.exports = {
                 test: /\.less$/,
                 exclude: /node_modules/,
                 loader: 'style!css!postcss!less'
+            }, {
+                test: /\.png/,
+                exclude: /node_modules/,
+                loader: 'file'
             }
         ]
     },
@@ -31,10 +35,9 @@ module.exports = {
         extensions: ['', '.js', '.jsx']
     },
     plugins: [
-        new webpack.optimize.UglifyJsPlugin({
-            compress: {
-                warnings: false
-            }
+        new webpack.ProvidePlugin({
+            $: 'jquery',
+            jQuery: 'jquery'
         }),
         new HtmlWebpackPlugin({
             template: path.join(__dirname, 'src/example/index.html')

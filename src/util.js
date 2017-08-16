@@ -1,15 +1,4 @@
-/**
- * simple `extend` method
- * @param {Object} target
- * @param {Object} source
- * @returns {Object}
- */
-export function extend(target, source) {
-    for (let key in source) {
-        target[key] = source[key];
-    }
-    return target;
-}
+import pathToRegexp from 'path-to-regexp';
 
 /**
  * get hash by full url
@@ -21,42 +10,43 @@ export function getHash(url) {
 }
 
 /**
+ * get route from routes filter by url
+ * @param {Array} routes
+ * @param {String} url
+ * @returns {Object}
+ */
+export function getRoute(routes, url) {
+    for (let i = 0, len = routes.length; i < len; i++) {
+        let route = routes[i];
+        let keys = [];
+        const regex = pathToRegexp(route.url, keys);
+        const match = regex.exec(url);
+        if (match) {
+            route.params = {};
+            for (let j = 0, l = keys.length; j < l; j++) {
+                const key = keys[j];
+                const name = key.name;
+                route.params[name] = match[j + 1];
+            }
+            return route;
+        }
+    }
+    return null;
+}
+
+/**
+ * has children
+ * @param {HTMLElement} parent
+ * @returns {boolean}
+ */
+export function hasChildren(parent) {
+    const children = parent.children;
+    return children.length > 0;
+}
+
+/**
  * noop
  */
 export function noop() {
 
-}
-
-/**
- * get route regex (ref to backbone)
- * @param route
- * @returns {RegExp}
- */
-export function getRegExp(route) {
-    const optionalParam = /\((.*?)\)/g;
-    const namedParam = /(\(\?)?:\w+/g;
-    const splatParam = /\*\w+/g;
-    const escapeRegExp = /[\-{}\[\]+?.,\\\^$|#\s]/g;
-    route = route.replace(escapeRegExp, '\\$&')
-        .replace(optionalParam, '(?:$1)?')
-        .replace(namedParam, function (match, optional) {
-            return optional ? match : '([^/?]+)';
-        })
-        .replace(splatParam, '([^?]*?)');
-    return new RegExp('^' + route + '(?:\\?([\\s\\S]*))?$');
-}
-
-/**
- * get params from route
- * @param {String} route
- * @returns {Array} params
- */
-export function getParams(route) {
-    const regex = /:(\w+)/g;
-    let params = [];
-    let found;
-    while ((found = regex.exec(route)) !== null) {
-        params.push(found[1]);
-    }
-    return params;
 }
